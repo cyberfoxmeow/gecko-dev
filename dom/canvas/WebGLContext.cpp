@@ -93,6 +93,40 @@
 // Generated
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
+
+static void log_to_console_and_file(const char* filename, const char* format, ...) {
+  FILE* file = fopen(filename, "a");  // Open file for appending
+  if (file == NULL) {
+    perror("Failed to open log file");
+    return;
+  }
+
+  // Get the current time
+  time_t t = time(NULL);
+  struct tm* tm_info = localtime(&t);
+  char time_str[20];
+  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+
+  // Write the current time to the log file
+  printf("[%s] ", time_str);
+  fprintf(file, "[%s] ", time_str);
+
+  // Write the log message
+  va_list args;
+  va_start(args, format);
+  vfprintf(file, format, args);
+  vprintf(format, args);
+  va_end(args);
+
+  // Add a newline at the end of the log message
+  printf("\n");
+  fprintf(file, "\n");
+
+  fclose(file);
+}
+
+
+
 namespace mozilla {
 
 WebGLContextOptions::WebGLContextOptions() {
