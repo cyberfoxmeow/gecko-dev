@@ -15,6 +15,112 @@
 #include "WebGLFormats.h"
 #include "WebGLTransformFeedback.h"
 
+
+
+//#ifdef LOG_TO_CONSOLE_WEBGL2
+//static void log_to_console_and_file(const char* filename, const char* format, ...) { // print personalized logs to console and txt file
+//  FILE* file = fopen(filename, "a");  // Open file for appending
+//  if (file == NULL) {
+//    perror("Failed to open log file");
+//    return;
+//  }
+//
+//  // Get the current time
+//  time_t t = time(NULL);
+//  struct tm* tm_info = localtime(&t);
+//  char time_str[20];
+//  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+//
+//  // Write the current time to the log file
+//  printf("[%s] ", time_str);
+//  fprintf(file, "[%s] ", time_str);
+//
+//  // Write the log message
+//  va_list args;
+//  va_start(args, format);
+//  vfprintf(file, format, args);
+//  vprintf(format, args);
+//  va_end(args);
+//
+//  // Add a newline at the end of the log message
+//  printf("\n");
+//  fprintf(file, "\n");
+//
+//  fclose(file);
+//}
+
+static void log_to_console_and_file(bool enter_by_end, const char* filename, const char* format, ...) { // print personalized logs to console and txt file
+  FILE* file = fopen(filename, "a");  // Open file for appending
+  if (file == NULL) {
+    perror("Failed to open log file");
+    return;
+  }
+
+  // Get the current time
+  time_t t = time(NULL);
+  struct tm* tm_info = localtime(&t);
+  char time_str[20];
+  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+
+  // Write the current time to the log file
+  if (enter_by_end == true) {
+    printf("[%s] ", time_str);
+    fprintf(file, "[%s] ", time_str);
+  }
+
+  // Write the log message
+  va_list args;
+  va_start(args, format);
+  vfprintf(file, format, args);
+  vprintf(format, args);
+  va_end(args);
+
+  // Add a newline at the end of the log message
+  if (enter_by_end == true) {
+    printf("\n");
+    fprintf(file, "\n");
+  }
+
+  fclose(file);
+}
+
+static void log_to_file(bool enter_by_end, const char* filename, const char* format, ...) { // print personalized logs to console and txt file
+  FILE* file = fopen(filename, "a");  // Open file for appending
+  if (file == NULL) {
+    perror("Failed to open log file");
+    return;
+  }
+
+  // Get the current time
+  time_t t = time(NULL);
+  struct tm* tm_info = localtime(&t);
+  char time_str[20];
+  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+
+  // Write the current time to the log file
+  if (enter_by_end == true) {
+    fprintf(file, "[%s] ", time_str);
+  }
+
+  // Write the log message
+  va_list args;
+  va_start(args, format);
+  vfprintf(file, format, args);
+  va_end(args);
+
+  // Add a newline at the end of the log message
+  if (enter_by_end == true) {
+    fprintf(file, "\n");
+  }
+
+  fclose(file);
+}
+
+
+//#endif
+
+
+
 namespace mozilla {
 
 UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
@@ -62,6 +168,10 @@ static const gl::GLFeature kRequiredFeatures[] = {
 
 bool WebGLContext::InitWebGL2(FailureReason* const out_failReason) {
   MOZ_ASSERT(IsWebGL2(), "WebGLContext is not a WebGL 2 context!");
+
+
+  log_to_console_and_file(true, "LOGG.txt", "[WebGLContext::InitWebGL2] WebGL2 is called. ");
+
 
   std::vector<gl::GLFeature> missingList;
 

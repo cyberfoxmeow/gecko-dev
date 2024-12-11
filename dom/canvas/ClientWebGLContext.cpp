@@ -40,6 +40,45 @@
 #include "WebGLTextureUpload.h"
 #include "WebGLValidateStrings.h"
 
+
+
+// copied from WebGL2Context.cpp   
+static void log_to_console_and_file(bool enter_by_end, const char* filename, const char* format, ...) { // print personalized logs to console and txt file
+  FILE* file = fopen(filename, "a");  // Open file for appending
+  if (file == NULL) {
+    perror("Failed to open log file");
+    return;
+  }
+
+  // Get the current time
+  time_t t = time(NULL);
+  struct tm* tm_info = localtime(&t);
+  char time_str[20];
+  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+
+  // Write the current time to the log file
+  printf("[%s] ", time_str);
+  fprintf(file, "[%s] ", time_str);
+
+  // Write the log message
+  va_list args;
+  va_start(args, format);
+  vfprintf(file, format, args);
+  vprintf(format, args);
+  va_end(args);
+
+  // Add a newline at the end of the log message
+  if (enter_by_end == true) {
+    printf("\n");
+    fprintf(file, "\n");
+  }
+
+  fclose(file);
+}
+
+
+
+
 namespace mozilla {
 
 namespace webgl {
@@ -3508,6 +3547,9 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
 
 void ClientWebGLContext::BufferData(GLenum target, WebGLsizeiptr rawSize,
                                     GLenum usage) {
+
+  log_to_console_and_file(true, "LOGG.txt", "[ClientWebGLContext::BufferData] (1), target=0x%lx, usage=0x%lx",target, usage);
+
   const FuncScope funcScope(*this, "bufferData");
   if (!ValidateNonNegative("size", rawSize)) return;
 
@@ -3522,6 +3564,10 @@ void ClientWebGLContext::BufferData(GLenum target, WebGLsizeiptr rawSize,
 void ClientWebGLContext::BufferData(
     GLenum target, const dom::Nullable<dom::ArrayBuffer>& maybeSrc,
     GLenum usage) {
+
+  //log_to_console_and_file(true, "LOGG.txt", "[ClientWebGLContext::BufferData] 2");
+  //not passed by
+
   const FuncScope funcScope(*this, "bufferData");
   if (!ValidateNonNull("src", maybeSrc)) return;
   const auto& src = maybeSrc.Value();
@@ -3535,6 +3581,11 @@ void ClientWebGLContext::BufferData(GLenum target,
                                     const dom::ArrayBufferView& src,
                                     GLenum usage, GLuint srcElemOffset,
                                     GLuint srcElemCountOverride) {
+  
+  log_to_console_and_file(true, "LOGG.txt", "[ClientWebGLContext::BufferData] (3), target=0x%lx, usage=0x%lx, srcoffset=%u, srccountoverfide=%u", 
+                                                                                target, usage, srcElemOffset, srcElemCountOverride);
+
+
   const FuncScope funcScope(*this, "bufferData");
   size_t elemSize = SizeOfViewElem(src);
   src.ProcessFixedData([&](const Span<uint8_t>& aData) {

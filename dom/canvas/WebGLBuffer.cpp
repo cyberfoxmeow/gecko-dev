@@ -9,6 +9,45 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
 
+
+//  D:/git/mozilla-source/gecko-dev-release/dom/canvas/WebGL2Context.cpp(21,13): note: previous definition is here
+//
+//static void log_to_console_and_file(
+//    const char* filename, const char* format,
+//    ...) {  // print personalized logs to console and txt file
+//  FILE* file = fopen(filename, "a");  // Open file for appending
+//  if (file == NULL) {
+//    perror("Failed to open log file");
+//    return;
+//  }
+//
+//  // Get the current time
+//  time_t t = time(NULL);
+//  struct tm* tm_info = localtime(&t);
+//  char time_str[20];
+//  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+//
+//  // Write the current time to the log file
+//  printf("[%s] ", time_str);
+//  fprintf(file, "[%s] ", time_str);
+//
+//  // Write the log message
+//  va_list args;
+//  va_start(args, format);
+//  vfprintf(file, format, args);
+//  vprintf(format, args);
+//  va_end(args);
+//
+//  // Add a newline at the end of the log message
+//  printf("\n");
+//  fprintf(file, "\n");
+//
+//  fclose(file);
+//}
+
+
+
+
 namespace mozilla {
 
 WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
@@ -78,6 +117,10 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
                              const void* const maybeData, const GLenum usage,
                              bool allowUninitialized) {
   // The driver knows only GLsizeiptr, which is int32_t on 32bit!
+
+  log_to_console_and_file(true, "LOGG.txt", "[WebGLBuffer::BufferData], target=0x%lx, size=%lu, usage=0x%lx, allowUninitialized=%d",
+                                                                    target, size, usage, allowUninitialized);
+
   bool sizeValid = CheckedInt<GLsizeiptr>(size).isValid();
 
   if (mContext->gl->WorkAroundDriverBugs()) {
@@ -88,6 +131,10 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
 
     // Bug 1610383
     if (mContext->gl->IsANGLE()) {
+
+      log_to_console_and_file(true, "LOGG.txt", "[WebGLBuffer::BufferData] mContext->gl->IsANGLE()"); 
+
+
       // While ANGLE seems to support up to `unsigned int`, UINT32_MAX-4 causes
       // GL_OUT_OF_MEMORY in glFlush??
       sizeValid &= CheckedInt<int32_t>(size).isValid();
@@ -157,6 +204,16 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
     gl->fBufferData(target, size, uploadData, usage);
   }
 
+
+      
+  //log_to_console_and_file(true, "LOGG1.txt", "[WebGLBuffer::BufferData]: uploadData (size=%lu)",size);
+  //for (auto i = 0; i < size; i++) {
+  //  log_to_file(false, "LOGG1.txt", "0x%lx, ", ((int*)uploadData)[i]);
+  //}
+  //log_to_file(true, "LOGG1.txt", " ");
+
+
+
   mContext->OnDataAllocCall();
 
   mUsage = usage;
@@ -178,7 +235,19 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
 void WebGLBuffer::BufferSubData(GLenum target, uint64_t rawDstByteOffset,
                                 uint64_t rawDataLen, const void* data,
                                 bool unsynchronized) const {
+
+
+  //log_to_console_and_file(true, "LOGG.txt", "[WebGLBuffer::BufferSubData]");
+
   if (!ValidateRange(rawDstByteOffset, rawDataLen)) return;
+
+
+  //log_to_console_and_file(true, "LOGG.txt",
+  //                        "[WebGLBuffer::BufferSubData], target=0x%lx, offset=%lu, "
+  //                        "rawDataLen=%lu, unsynchronized=%d",
+  //    target, rawDstByteOffset, rawDataLen, unsynchronized);
+
+
 
   const CheckedInt<GLintptr> dstByteOffset = rawDstByteOffset;
   const CheckedInt<GLsizeiptr> dataLen = rawDataLen;

@@ -43,6 +43,7 @@ class DepthAndStencilBuffer final : public SupportsWeakPtr {
 };
 
 class MozFramebuffer final {
+ public:
   const WeakPtr<GLContext> mWeakGL;
 
  public:

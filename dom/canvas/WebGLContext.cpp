@@ -94,36 +94,40 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
 
-static void log_to_console_and_file(const char* filename, const char* format, ...) {
-  FILE* file = fopen(filename, "a");  // Open file for appending
-  if (file == NULL) {
-    perror("Failed to open log file");
-    return;
-  }
 
-  // Get the current time
-  time_t t = time(NULL);
-  struct tm* tm_info = localtime(&t);
-  char time_str[20];
-  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
-
-  // Write the current time to the log file
-  printf("[%s] ", time_str);
-  fprintf(file, "[%s] ", time_str);
-
-  // Write the log message
-  va_list args;
-  va_start(args, format);
-  vfprintf(file, format, args);
-  vprintf(format, args);
-  va_end(args);
-
-  // Add a newline at the end of the log message
-  printf("\n");
-  fprintf(file, "\n");
-
-  fclose(file);
-}
+// also defined in WebGL2Context.cpp 
+//#ifdef LOG_TO_CONSOLE_WEBGL
+//static void log_to_console_and_file(const char* filename, const char* format, ...) { // print personalized logs to console and txt file
+//  FILE* file = fopen(filename, "a");  // Open file for appending
+//  if (file == NULL) {
+//    perror("Failed to open log file");
+//    return;
+//  }
+//
+//  // Get the current time
+//  time_t t = time(NULL);
+//  struct tm* tm_info = localtime(&t);
+//  char time_str[20];
+//  strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
+//
+//  // Write the current time to the log file
+//  printf("[%s] ", time_str);
+//  fprintf(file, "[%s] ", time_str);
+//
+//  // Write the log message
+//  va_list args;
+//  va_start(args, format);
+//  vfprintf(file, format, args);
+//  vprintf(format, args);
+//  va_end(args);
+//
+//  // Add a newline at the end of the log message
+//  printf("\n");
+//  fprintf(file, "\n");
+//
+//  fclose(file);
+//}
+// #endif
 
 
 
@@ -293,6 +297,8 @@ void WebGLContext::OnMemoryPressure() {
 bool WebGLContext::CreateAndInitGL(
     bool forceEnabled, std::vector<FailureReason>* const out_failReasons) {
   const FuncScope funcScope(*this, "<Create>");
+
+  log_to_console_and_file(true, "LOGG.txt", "The function WebGLContext::CreateAndInitGL is called in WebGLContext.cpp. ");
 
   // WebGL2 is separately blocked:
   if (IsWebGL2() && !forceEnabled) {
@@ -730,6 +736,31 @@ void WebGLContext::FinishInit() {
 
   mScissorRect = {0, 0, size.width, size.height};
   mScissorRect.Apply(*gl);
+
+
+
+  log_to_console_and_file(true, "LOGG.txt", "WebGLContext::FinishInit(), %f, %f", mViewportWidth, mViewportHeight);
+  log_to_console_and_file(true, "LOGG.txt", "mDefaultFB:mSamples,mFB,mColorTarget:  %lu, %lu, 0x%lx", mDefaultFB->mSamples, mDefaultFB->mFB, mDefaultFB->mColorTarget);
+  // color target 36161 RENDERBUFFER	0x8D41
+  //               3553 TEXTURE_2D	0x0DE1
+  //auto& glcontext1 = mDefaultFB->mWeakGL->mProfile;  // sCurrentContext;
+  log_to_console_and_file(true, "LOGG.txt", "mDefaultFB->mWeakGL->mProfile: %u", mDefaultFB->mWeakGL->mProfile);
+
+  // below get error: 
+  // Crash AnnotJavaScript warning: https://127.0.0.1:14443/, line 1589: Failed to create WebGL context: WebGL actor Initialize failed
+  //atioJavaScript warning: https://127.0.0.1:14443/, line 1589: Failed to create WebGL context: WebGL actor Initialize failed
+  //n GraphicsCriticalError: |[C0][GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown (t=187.739) [GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown
+  //Crash Annotation GraphicsCriticalError: |[C0][GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown (t=43.0544) [GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown
+  //Crash Annotation GraphicsCriticalError: |[0]GP+[GFX1-]: shader-cache: Timed out before finishing loads (t=151.692) |[1][GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown (t=390.442) [GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdownCrash Annotation GraphicsCriticalError: |[C0][GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown (t=84.7845) [GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown
+  //                                        ////////////////////
+  //nsCString* WSIInfo = nullptr;
+  //mDefaultFB->mWeakGL->GetWSIInfo(WSIInfo);
+  //log_to_console_and_file("LOGG.txt", "WSIInfo: %s", WSIInfo);
+  //                                        ////////////
+  GLuint _getDefaultFramebuffer = mDefaultFB->mWeakGL->GetDefaultFramebuffer();
+  log_to_console_and_file(true, "LOGG.txt", "GetDefaultFramebuffer(): %lu", _getDefaultFramebuffer);
+
+
 
   //////
   // Check everything
@@ -1466,10 +1497,29 @@ gl::SwapChain* WebGLContext::GetSwapChain(WebGLFramebuffer* const xrFb,
 
 Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer(
     WebGLFramebuffer* const xrFb, const bool webvr) {
+
+  log_to_console_and_file(true, "LOGG.txt","Maybe<layers::SurfaceDescriptor> WebGLContext::GetFrontBuffer");
+
   auto* swapChain = GetSwapChain(xrFb, webvr);
   if (!swapChain) return {};
   const auto& front = swapChain->FrontBuffer();
   if (!front) return {};
+
+
+
+  auto& swapChain_frontBuffer = mSwapChain.FrontBuffer();
+  // swapChain_frontBuffer->ProducerAcquire();
+  auto& buffermDesc = swapChain_frontBuffer->mDesc;
+  auto descSize = buffermDesc.size;
+  auto buffercolorSpace = buffermDesc.colorSpace;
+  log_to_console_and_file(true, "LOGG.txt", "typeid(swapChain_frontBuffer).name(): %s", typeid(swapChain_frontBuffer).name());
+  log_to_console_and_file(true, "LOGG.txt", "typeid(buffermDesc).name(): %s", typeid(buffermDesc).name());
+  log_to_console_and_file(true, "LOGG.txt", "typeid(descSize).name(): %s", typeid(descSize).name());
+  log_to_console_and_file(true, "LOGG.txt", "&swapChain_frontBuffer: %p", &swapChain_frontBuffer);
+  log_to_console_and_file(true, "LOGG.txt", "descSize: %d", descSize);
+  log_to_console_and_file(true, "LOGG.txt", "colorSpace: %d", buffercolorSpace);
+
+
 
   return front->ToSurfaceDescriptor();
 }
